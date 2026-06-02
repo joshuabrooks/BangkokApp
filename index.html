@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bangkok 2026 Family Trip Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#004B87">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BKK Trip">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <style>
+        :root {
+            --primary: #004B87;
+            --secondary: #FFDD00;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #333333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+        .header { background: linear-gradient(135deg, var(--primary), #002F56); color: white; padding: 25px 20px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .header h1 { font-size: 22px; letter-spacing: 1px; margin-bottom: 4px; }
+        .header p { font-size: 13px; color: rgba(255,255,255,0.8); }
+        .glx-badge { background-color: var(--secondary); color: var(--primary); padding: 4px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; display: inline-block; margin-top: 8px; }
+        .offline-banner { display: none; background: #d9534f; color: white; text-align: center; padding: 8px; font-size: 12px; font-weight: bold; }
+        body.offline .offline-banner { display: block; }
+        .install-bar { background: var(--primary); color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+        .install-bar button { background: var(--secondary); color: var(--primary); border: none; padding: 6px 14px; border-radius: 12px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .install-bar .close-install { background: none; color: white; padding: 4px 8px; font-size: 16px; }
+        .alerts-container { padding: 15px; }
+        .section-title { font-size: 15px; font-weight: 700; margin: 10px 5px 8px; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .alert-card { background: #fff3cd; border-left: 5px solid #ffc107; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+        .alert-card.rain { background: #e2f0fe; border-left-color: #0275d8; }
+        .alert-icon { font-size: 18px; flex-shrink: 0; }
+        .tab-navigation { display: flex; overflow-x: auto; padding: 0 10px; gap: 8px; margin-bottom: 15px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .tab-navigation::-webkit-scrollbar { display: none; }
+        .tab-btn { background: white; border: 1px solid #e0e0e0; padding: 9px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s; color: #666; }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .itinerary-list { padding: 0 15px; }
+        .day-group { display: none; }
+        .day-group.active { display: block; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #eaeaea; }
+        .card.tournament { border-left: 5px solid var(--primary); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
+        .card-title { font-size: 16px; font-weight: 700; color: #111; }
+        .tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+        .tag.temple   { background: #ffe6cc; color: #b35900; }
+        .tag.evening  { background: #e1d5e7; color: #6c3483; }
+        .tag.market   { background: #d5e8d4; color: #274e13; }
+        .tag.kids     { background: #fce4d6; color: #c65911; }
+        .tag.champ    { background: #d4edda; color: #155724; }
+        .tag.views    { background: #dae8fc; color: #0b5394; }
+        .tag.food     { background: #fff2cc; color: #7f6000; }
+        .tag.culture  { background: #e8def8; color: #4a148c; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 10px 0; font-size: 12px; color: #555; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .meta-item { display: flex; align-items: center; gap: 5px; }
+        .mi { font-size: 14px; }
+        .description { font-size: 13px; color: #666; line-height: 1.45; margin: 8px 0; }
+        .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+        .done-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #444; cursor: pointer; user-select: none; }
+        .done-label input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        .map-btn { background: #e6f4ea; color: #137333; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .budget-hero { background: linear-gradient(135deg, #137333, #0b5322); color: white; padding: 20px; border-radius: 16px; margin-bottom: 15px; }
+        .budget-hero h3 { font-size: 16px; margin-bottom: 4px; }
+        .budget-hero p { font-size: 12px; opacity: 0.75; margin-bottom: 14px; }
+        .b-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+        .budget-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+        .budget-table th { text-align: left; color: #666; font-weight: 600; padding: 8px 6px; border-bottom: 2px solid #eee; }
+        .budget-table td { padding: 9px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .budget-table tr:last-child td { border-bottom: none; background: #f0f8ff; font-weight: 700; }
+        .tip-list { list-style: none; font-size: 13px; color: #555; line-height: 1.9; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #999; background: none; border: none; cursor: pointer; gap: 3px; flex: 1; padding: 0; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-icon { font-size: 22px; line-height: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="offline-banner">📵 You're offline — all content still works!</div>
+
+    <div id="install-bar" class="install-bar" style="display:none;">
+        <span>📲 Add to Home Screen for offline use</span>
+        <div style="display:flex;gap:8px;">
+            <button onclick="installApp()">Install</button>
+            <button class="close-install" onclick="document.getElementById('install-bar').style.display='none'">✕</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>🇹🇭 BANGKOK FAMILY TRIP</h1>
+        <p>13 – 19 JULY 2026 &nbsp;•&nbsp; 4 Travellers</p>
+        <span class="glx-badge">🏆 GLX CHAMPIONSHIP FINALS</span>
+    </div>
+
+    <div id="itinerary-page" class="page active">
+        <div class="alerts-container">
+            <div class="section-title">💡 Smart Trip Alerts</div>
+            <div class="alert-card rain"><span class="alert-icon">🌧️</span><div><strong>Rainy Season:</strong> Pack light ponchos daily. Buy locally for ~R20 each.</div></div>
+            <div class="alert-card"><span class="alert-icon">🌡️</span><div><strong>Beat the Heat:</strong> Outdoor sights peak at 38°C! Finish before noon.</div></div>
+        </div>
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchDay(this,'day1')">Mon 13</button>
+            <button class="tab-btn" onclick="switchDay(this,'day2')">Tue 14</button>
+            <button class="tab-btn" onclick="switchDay(this,'day3')">Wed 15</button>
+            <button class="tab-btn" onclick="switchDay(this,'day4')">Thu 16</button>
+            <button class="tab-btn" onclick="switchDay(this,'day5')">Fri 17</button>
+            <button class="tab-btn" onclick="switchDay(this,'day6')">Sat 18</button>
+            <button class="tab-btn" onclick="switchDay(this,'day7')">Sun 19</button>
+        </div>
+        <div class="itinerary-list">
+
+            <div id="day1" class="day-group active">
+                <div class="card"><div class="card-header"><div class="card-title">The Grand Palace</div><span class="tag temple">History</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 4.5 km · 15 min Grab</div><div class="meta-item"><span class="mi">🕐</span> 08:30 – 15:30</div><div class="meta-item"><span class="mi">💰</span> R275 (U12 free)</div><div class="meta-item"><span class="mi">👕</span> Covers required</div></div><p class="description">Arrive at opening to beat the crowds and heat. Dress code strictly enforced — shoulders and knees covered.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Grand+Palace+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Wat Pho (Reclining Buddha)</div><span class="tag temple">Temple</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚶</span> 5 min walk</div><div class="meta-item"><span class="mi">🕐</span> 08:00 – 19:30</div><div class="meta-item"><span class="mi">💰</span> R165 / person</div></div><p class="description">Magnificent 46-meter golden Reclining Buddha. The kids will be amazed by the scale — allow 45 minutes here.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Wat+Pho+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Chao Phraya Dinner Cruise</div><span class="tag evening">Evening</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚢</span> Central Pier (S6)</div><div class="meta-item"><span class="mi">🕐</span> 19:00 – 21:00</div><div class="meta-item"><span class="mi">💰</span> R450–R650 / person</div><div class="meta-item"><span class="mi">📌</span> Book in advance</div></div><p class="description">Glide past lit-up temples along the river. Thai buffet included. Stunning city photography — don't miss it!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Central+Pier+Sathorn+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+            </div>
+
+            <div id="day2" class="day-group">
+                <div class="card"><div class="card-header"><div class="card-title">Chatuchak Weekend Market</div><span class="tag market">Shopping</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 12 km · 25 min Grab</div><div class="meta-item"><span class="mi">🕐</span> 09:00 – 17:00</div><div class="meta-item"><span class="mi">💰</span> Free entry</div><div class="meta-item"><span class="mi">🏷️</span> Haggling welcome</div></div><p class="description">World's largest weekend market — 15,000+ stalls. Arrive early. Comfortable shoes essential. Don't miss the pets section and street art zone!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Chatuchak+Weekend+Market" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Lunch at Chatuchak Food Court</div><span class="tag food">Food</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🍽️</span> Sections 26–27</div><div class="meta-item"><span class="mi">🕐</span> 12:00 – 13:30</div><div class="meta-item"><span class="mi">💰</span> R40–R100 / dish</div></div><p class="description">Pad thai, grilled skewers, fresh coconuts, mango sticky rice. Authentic and cheap. Recharge before more shopping!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Chatuchak+Market+Food+Court" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Hotel Pool &amp; Chill Evening</div><span class="tag evening">Relax</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🏊</span> Hotel pool</div><div class="meta-item"><span class="mi">🕐</span> 16:00 – 20:00</div><div class="meta-item"><span class="mi">💰</span> Included</div></div><p class="description">Cool off and recharge. Casual dinner tonight — room service or hotel restaurant. Early rest before the championship begins!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label></div></div>
+            </div>
+
+            <div id="day3" class="day-group">
+                <div class="card tournament"><div class="card-header"><div class="card-title">GLX Championship — Day 1</div><span class="tag champ">Tournament</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">📍</span> MBK Center Hall B5</div><div class="meta-item"><span class="mi">🕐</span> 09:00 – 17:30</div><div class="meta-item"><span class="mi">🎟️</span> Competitor pass</div></div><p class="description">Tournament kicks off! Early group rounds in the morning. Grab food from MBK food court between matches. Bring a water bottle.</p></div>
+                <div class="card"><div class="card-header"><div class="card-title">SEA LIFE Ocean World</div><span class="tag kids">Family Fun</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚶</span> 0.6 km from MBK</div><div class="meta-item"><span class="mi">🕐</span> 10:00 – 20:00</div><div class="meta-item"><span class="mi">💰</span> R440 child / R550 adult</div></div><p class="description">Inside Siam Paragon. Stunning glass underwater tunnel — sharks, rays &amp; penguins. Interactive touch pools. Perfect during tournament breaks!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=SEA+LIFE+Bangkok+Ocean+World" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Dinner at Siam Square</div><span class="tag evening">Dining</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🍽️</span> 2 min walk from Paragon</div><div class="meta-item"><span class="mi">🕐</span> 18:00 – 20:00</div><div class="meta-item"><span class="mi">💰</span> R200–R400 / person</div></div><p class="description">Vibrant modern Thai dining. Try khao soi or massaman curry. Lively area for post-match browsing.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Siam+Square+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+            </div>
+
+            <div id="day4" class="day-group">
+                <div class="card tournament"><div class="card-header"><div class="card-title">GLX Championship — Day 2</div><span class="tag champ">Quarter-Finals</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">📍</span> MBK Center Hall B5</div><div class="meta-item"><span class="mi">🕐</span> 09:00 – 17:30</div><div class="meta-item"><span class="mi">🏆</span> Quarter-Finals</div></div><p class="description">Quarter-finals! Stakes get higher. Parents can shuttle younger kids to MELAND during longer waiting periods.</p></div>
+                <div class="card"><div class="card-header"><div class="card-title">MELAND Playground &amp; Arcade</div><span class="tag kids">Adventure</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 3.2 km from MBK</div><div class="meta-item"><span class="mi">🕐</span> 10:00 – 21:00</div><div class="meta-item"><span class="mi">💰</span> R299 entry + rides</div></div><p class="description">Massive indoor theme park — ball pits, obstacle courses, slides, arcade games. Kids will be thoroughly worn out!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=MELAND+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Late Noodle Dinner</div><span class="tag food">Easy Dinner</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🍜</span> Near MELAND</div><div class="meta-item"><span class="mi">🕐</span> 19:30 – 21:00</div><div class="meta-item"><span class="mi">💰</span> R150–R300</div></div><p class="description">Everyone's exhausted — keep it simple! Noodles, satay, or a quick food court meal. Early back to hotel for rest.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label></div></div>
+            </div>
+
+            <div id="day5" class="day-group">
+                <div class="card tournament"><div class="card-header"><div class="card-title">GLX Championship — Day 3</div><span class="tag champ">Semi-Finals</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">📍</span> MBK Center Hall B5</div><div class="meta-item"><span class="mi">🕐</span> 10:00 – 18:00</div><div class="meta-item"><span class="mi">🥇</span> Semi-Finals</div></div><p class="description">Semi-finals — intense action! Crowds build all day. Good breakfast before heading out; it will be a long, exciting session.</p></div>
+                <div class="card"><div class="card-header"><div class="card-title">Jim Thompson House</div><span class="tag culture">Culture</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 2.5 km from MBK</div><div class="meta-item"><span class="mi">🕐</span> 09:00 – 17:00</div><div class="meta-item"><span class="mi">💰</span> R180 / person</div><div class="meta-item"><span class="mi">🗣️</span> Tours every 20 min</div></div><p class="description">Six interconnected traditional Thai houses with silk and antiques. Fascinating story of American expat Jim Thompson. About 45 min visit.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Jim+Thompson+House+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Yaowarat Chinatown Street Food</div><span class="tag food">Food &amp; Culture</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 15 min from Jim Thompson</div><div class="meta-item"><span class="mi">🕐</span> 17:00 – 20:00</div><div class="meta-item"><span class="mi">💰</span> R200–R400</div></div><p class="description">Bangkok's neon-lit Chinatown. Roasted duck, dim sum, seafood, mango desserts. Walk slowly and graze — a trip highlight!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Yaowarat+Road+Chinatown+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+            </div>
+
+            <div id="day6" class="day-group">
+                <div class="card tournament"><div class="card-header"><div class="card-title">GLX Championship — Grand Finals</div><span class="tag champ">👑 Finals!</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">📍</span> MBK Center Main Hall</div><div class="meta-item"><span class="mi">🕐</span> 09:00 – 20:00</div><div class="meta-item"><span class="mi">🏆</span> Championship Finals</div></div><p class="description">THE big day! Electric atmosphere all day leading to the ceremony. Bring snacks and water — full-day event. Dress to impress for the evening!</p></div>
+                <div class="card"><div class="card-header"><div class="card-title">Playmondo at CentralWorld</div><span class="tag kids">Theme Park</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 4 km from MBK</div><div class="meta-item"><span class="mi">🕐</span> 11:00 – 21:00</div><div class="meta-item"><span class="mi">💰</span> R399 entry + rides</div></div><p class="description">Indoor coaster, water rides, interactive zones inside CentralWorld mall. Great for non-competing family members during finals.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Playmondo+CentralWorld+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Victory Celebration Dinner</div><span class="tag evening">🎉 Celebration</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🍽️</span> CentralWorld rooftop</div><div class="meta-item"><span class="mi">🕐</span> 20:30 – 22:00</div><div class="meta-item"><span class="mi">💰</span> R350–R600</div></div><p class="description">Celebrate the finals! Premium dinner, great views, the whole family. A night to remember — take lots of photos!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=CentralWorld+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+            </div>
+
+            <div id="day7" class="day-group">
+                <div class="card"><div class="card-header"><div class="card-title">Baiyoke Sky Observation Deck</div><span class="tag views">360° Views</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🚗</span> 3 km from hotel</div><div class="meta-item"><span class="mi">🕐</span> 09:00 – 14:00</div><div class="meta-item"><span class="mi">💰</span> R220 (buffet +R270)</div></div><p class="description">Bangkok's iconic tower — 360° rotating deck on the 84th floor, views for 50+ km. Lunch buffet on the 77th floor included with combined ticket.</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label><a href="https://maps.google.com/?q=Baiyoke+Tower+II+Bangkok" target="_blank" class="map-btn">📍 Maps</a></div></div>
+                <div class="card tournament"><div class="card-header"><div class="card-title">GLX Awards Ceremony</div><span class="tag champ">🏆 Grand Finals</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">📍</span> MBK Center Main Hall</div><div class="meta-item"><span class="mi">🕐</span> 16:00 – 19:00</div><div class="meta-item"><span class="mi">👔</span> Dress nicely!</div></div><p class="description">The grand awards ceremony! Trophies, photos, cheers. This is the whole reason for the trip — savour every moment. Bring the camera!</p></div>
+                <div class="card"><div class="card-header"><div class="card-title">Farewell Dinner</div><span class="tag evening">Goodbye Bangkok</span></div><div class="meta-grid"><div class="meta-item"><span class="mi">🍽️</span> Hotel or riverside</div><div class="meta-item"><span class="mi">🕐</span> 19:30 – 21:30</div><div class="meta-item"><span class="mi">💰</span> R400–R650</div></div><p class="description">Last meal together — share favourite memories and plan the next trip! Early night to pack. Flights tomorrow. What a week!</p><div class="card-actions"><label class="done-label"><input type="checkbox" onchange="saveDone(this)"> Done</label></div></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="budget-page" class="page">
+        <div class="alerts-container">
+            <div class="budget-hero">
+                <h3>💳 Trip Budget Dashboard</h3>
+                <p>Estimated caps · 4 travellers</p>
+                <div class="b-row"><span>Daily allowance / person:</span><strong>R300 – R800</strong></div>
+                <div class="b-row"><span>Estimated total (all 7 days):</span><strong>R25,000 – R40,000</strong></div>
+            </div>
+            <div class="section-title">📊 Daily Breakdown</div>
+            <div class="card" style="padding:10px 12px;">
+                <table class="budget-table">
+                    <thead><tr><th>Day</th><th>Theme</th><th>Est. Cost</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Mon 13</strong></td><td>Temples + Cruise</td><td>R1,800–R3,200</td></tr>
+                        <tr><td><strong>Tue 14</strong></td><td>Chatuchak Market</td><td>R800–R2,000</td></tr>
+                        <tr><td><strong>Wed 15</strong></td><td>SEA LIFE + Arena</td><td>R1,760–R2,200</td></tr>
+                        <tr><td><strong>Thu 16</strong></td><td>MELAND + Arena</td><td>R1,320–R2,000</td></tr>
+                        <tr><td><strong>Fri 17</strong></td><td>Jim Thompson + Chinatown</td><td>R1,200–R2,000</td></tr>
+                        <tr><td><strong>Sat 18</strong></td><td>Playmondo + Finals</td><td>R2,000–R2,800</td></tr>
+                        <tr><td><strong>Sun 19</strong></td><td>Baiyoke + Awards</td><td>R1,200–R1,800</td></tr>
+                        <tr><td colspan="2"><strong>Total (4 people)</strong></td><td><strong>R25,000+</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-title" style="margin-top:15px;">💡 Money Tips</div>
+            <div class="card">
+                <ul class="tip-list">
+                    <li>🚗 <strong>Grab app</strong> — always cheaper &amp; safer than street taxis</li>
+                    <li>📱 <strong>Prepaid SIM</strong> at airport — R300–R400 for a week of data</li>
+                    <li>🍜 <strong>Street food meals</strong> cost R50–R150 — authentic and delicious</li>
+                    <li>⏰ <strong>Arrive before 9 AM</strong> at major sites to skip queues</li>
+                    <li>🏷️ <strong>Haggle at markets</strong> — expect 20–30% off asking price</li>
+                    <li>🏨 <strong>Hotel breakfast</strong> included — take advantage every day</li>
+                    <li>💵 <strong>Withdraw R5,000–10,000 at a time</strong> from ATMs (lower fees)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="tools-page" class="page">
+        <div class="alerts-container">
+            <div class="section-title">🔧 Travel Essentials</div>
+            <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:8px;">🚗 Getting Around</div><p class="description"><strong>Grab app</strong> — download before you leave home. Safer and cheaper than street taxis. Average trip: R60–R150 depending on distance.</p></div>
+            <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:8px;">🗺️ Offline Maps</div><p class="description">Download <strong>Bangkok offline maps</strong> in Google Maps before boarding. Open app → search Bangkok → Download. Works with zero signal.</p></div>
+            <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:8px;">💵 Currency &amp; Cash</div><p class="description"><strong>Thai Baht (THB).</strong> 1 USD ≈ R33–35. Cards OK at hotels/restaurants but <em>street vendors are cash only</em>. Withdraw R5,000–10,000 at a time.</p></div>
+            <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:8px;">🌦️ Weather &amp; Packing</div><p class="description">July = rainy season. Short afternoon downpours. Pack <strong>light ponchos</strong> (R20 locally). Peak heat 36–38°C — finish outdoor sights before noon. SPF 50+!</p></div>
+            <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:8px;">🗣️ Useful Thai Phrases</div><p class="description">👋 <strong>Sawasdee krap/ka</strong> — Hello<br>🙏 <strong>Kop khun krap/ka</strong> — Thank you<br>🌶️ <strong>Mai phet</strong> — Not spicy<br>💰 <strong>Tao rai?</strong> — How much?<br>🚿 <strong>Hong nam yoo tee nai?</strong> — Where is the bathroom?</p></div>
+            <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:8px;">🚨 Emergency Numbers</div><p class="description"><strong>Police:</strong> 191 &nbsp;|&nbsp; <strong>Ambulance:</strong> 1669<br><strong>Tourist Police:</strong> 1155 (English spoken)<br><strong>Fire:</strong> 199</p></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" id="nav-itinerary" onclick="showPage('itinerary')"><span class="nav-icon">📅</span>Itinerary</button>
+        <button class="nav-item" id="nav-budget" onclick="showPage('budget')"><span class="nav-icon">💳</span>Expenses</button>
+        <button class="nav-item" id="nav-tools" onclick="showPage('tools')"><span class="nav-icon">ℹ️</span>Quick Tips</button>
+    </div>
+
+    <script>
+        function switchDay(btn, dayId) {
+            document.querySelectorAll('.day-group').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(dayId).classList.add('active');
+            btn.classList.add('active');
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+        function showPage(name) {
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(name + '-page').classList.add('active');
+            document.getElementById('nav-' + name).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function saveDone(cb) {
+            const id = 'done_' + (cb.closest('.card').querySelector('.card-title')?.textContent || '').replace(/\s+/g, '_');
+            localStorage.setItem(id, cb.checked ? '1' : '0');
+            cb.closest('.card').style.opacity = cb.checked ? '0.6' : '1';
+        }
+        function restoreCheckboxes() {
+            document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                const id = 'done_' + (cb.closest('.card').querySelector('.card-title')?.textContent || '').replace(/\s+/g, '_');
+                if (localStorage.getItem(id) === '1') { cb.checked = true; cb.closest('.card').style.opacity = '0.6'; }
+            });
+        }
+        function updateOnlineStatus() { document.body.classList.toggle('offline', !navigator.onLine); }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+        let deferredInstall;
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault(); deferredInstall = e;
+            document.getElementById('install-bar').style.display = 'flex';
+        });
+        function installApp() {
+            if (!deferredInstall) return;
+            deferredInstall.prompt();
+            deferredInstall.userChoice.then(() => { document.getElementById('install-bar').style.display = 'none'; });
+        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+        restoreCheckboxes();
+    </script>
+</body>
+</html>
